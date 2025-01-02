@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include "static.h"
-#include "MaxSensor_Wrapper.h"
-#include "OLED_Wrapper.h"
+#include <MaxSensor_Wrapper.h>
+#include <OLED_Wrapper.h>
 // Create the Screen_State_MANAGER object
 Screen_State_MANAGER screenManager(OLED_CLK, OLED_MOSI, OLED_CS, OLED_DC, OLED_RESET);
 Sensor_Manager sensorManager(MAX30102_INT, FINGER_THRESHOLD);

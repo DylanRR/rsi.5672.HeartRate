@@ -34,9 +34,11 @@ void setup() {
     sensorManager.setDataRamping(true);
     screenManager.init();
     screenManager.setState(0);
+    digitalWrite(DISPLAY_OUTPUT_LED, HIGH);
   }
   else {
     sensorManager.setDataRamping(false);
+    digitalWrite(SERIAL_OUTPUT_LED, HIGH);
   }
 }
 
@@ -100,6 +102,7 @@ void DC_MAIN_LOOP() {
 void DC_RUN_STATE(){
   if (screenManager.getActiveState() == 0) {
       screenManager.setState(1);
+      digitalWrite(FINGER_DETECTED_LED, HIGH);
   }
 
   int32_t temp_HR;
@@ -109,6 +112,7 @@ void DC_RUN_STATE(){
   new_HR = sensorManager.getHeartRate();
 
   if (temp_HR != new_HR) {
+    digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
     if (screenManager.getActiveState() == 1 || screenManager.getActiveState() == 2) {
       screenManager.setState(2, new_HR);
     }
@@ -117,6 +121,8 @@ void DC_RUN_STATE(){
 
 void DC_IDLE_STATE(){
   if (screenManager.getActiveState() != 0) {
+    digitalWrite(FINGER_DETECTED_LED, LOW);
+    digitalWrite(HEART_RATE_DETECTED_LED, LOW);
     screenManager.setState(0);
     sensorManager.reset();
   }
@@ -126,6 +132,7 @@ bool SC_transmitting = false;
 void SC_MAIN_LOOP() {
   if (sensorManager.isFingerDetected()) {
     if (!SC_transmitting) {
+      digitalWrite(FINGER_DETECTED_LED, HIGH);
       Serial.write(STX);
       SC_transmitting = true;
     }
@@ -135,12 +142,15 @@ void SC_MAIN_LOOP() {
     int32_t new_HR;
     new_HR = sensorManager.getHeartRate();
     if (temp_HR != new_HR) {
+      digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
       Serial.write(int32ToByte(new_HR));
       Serial.write(RS);
     }
   }
   else {
     if (SC_transmitting) {
+      digitalWrite(FINGER_DETECTED_LED, LOW);
+      digitalWrite(HEART_RATE_DETECTED_LED, LOW);
       Serial.write(ETX);
       SC_transmitting = false;
     }

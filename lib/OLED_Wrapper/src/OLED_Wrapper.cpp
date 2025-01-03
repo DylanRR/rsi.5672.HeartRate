@@ -19,6 +19,21 @@ void Screen_State_MANAGER::init() {
     this->result.Reset();
 }
 
+void Screen_State_MANAGER::Screen_State_IDLE::Reset() {
+    screenInIdleState = false;
+}
+
+void Screen_State_MANAGER::Screen_State_READING::Reset() {
+    screenInReadingState = false;
+}
+
+// Implement the Reset function for Screen_State_RESULT
+void Screen_State_MANAGER::Screen_State_RESULT::Reset() {
+    screenInResultState = false;
+    heartRate = 0;
+    timer = 0;
+}
+
 void Screen_State_MANAGER::setState(int state, int32_t heart_rate) {
     // Reset all states
     this->idle.Reset();
@@ -102,6 +117,11 @@ void Screen_State_MANAGER::Screen_State_READING::display(U8G2_SSD1322_NHD_256X64
     u8g2.drawStr(x, y, message);
     u8g2.sendBuffer();
     this->screenInReadingState = true;
+}
+
+// Implement the display function for Screen_State_RESULT with one parameter (does nothing)
+void Screen_State_MANAGER::Screen_State_RESULT::display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) {
+    // Do nothing
 }
 
 void Screen_State_MANAGER::Screen_State_RESULT::display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2, int32_t heart_rate) {

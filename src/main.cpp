@@ -22,6 +22,8 @@ bool communicationType;
 
 void setup() {
   Serial.begin(115200);
+  Serial.println("Begining setup main...");
+  debugPrint("Begining setup...");
   pinMode(SERIAL_OUTPUT_LED, OUTPUT);
   pinMode(DISPLAY_OUTPUT_LED, OUTPUT);
   communicationType = setup_determineCommunicationType();
@@ -29,25 +31,33 @@ void setup() {
   pinMode(HEART_RATE_DETECTED_LED, OUTPUT);
   
   sensorManager.init();
+  debugPrint("Max Sensor initialized...");
 
   if (communicationType) {
     sensorManager.setDataRamping(true);
+    debugPrint("Data ramping enabled...");
     screenManager.init();
+    debugPrint("Display initialized...");
     screenManager.setState(0);
+    debugPrint("Display set to 0 state...");
     digitalWrite(DISPLAY_OUTPUT_LED, HIGH);
   }
   else {
     sensorManager.setDataRamping(false);
+    debugPrint("Data ramping disabled...");
     digitalWrite(SERIAL_OUTPUT_LED, HIGH);
   }
+  debugPrint("Setup complete!");
 }
 
 bool setup_determineCommunicationType() {
+  debugPrint("Determining communication type...");
   pinMode(DISPLAY_COMMUNICATION_PIN, INPUT);
   pinMode(SERIAL_COMMUNICATION_PIN, INPUT);
   bool DCP = digitalRead(DISPLAY_COMMUNICATION_PIN);
   bool SCP = digitalRead(SERIAL_COMMUNICATION_PIN);
   if (DCP && SCP) {
+    debugPrint("ERROR: DCP and SCP are both HIGH", "setup_determineCommunicationType");
     while (true) {
       digitalWrite(DISPLAY_OUTPUT_LED, HIGH);
       digitalWrite(SERIAL_OUTPUT_LED, HIGH);
@@ -59,6 +69,7 @@ bool setup_determineCommunicationType() {
   }
   else if (!DCP && !SCP) {
     while (true) {
+      debugPrint("ERROR: DCP and SCP are both LOW", "setup_determineCommunicationType");
       digitalWrite(DISPLAY_OUTPUT_LED, HIGH);
       delay(250);
       digitalWrite(DISPLAY_OUTPUT_LED, LOW);
@@ -70,9 +81,11 @@ bool setup_determineCommunicationType() {
     }
   }
   else if (DCP) {
+    debugPrint("Communication type: Display");
     return true;
   }
   else {
+    debugPrint("Communication type: Serial");
     return false;
   }
 }
@@ -173,6 +186,7 @@ byte int32ToByte(int32_t value) {
 
 
 void debugPrint(String message, String location = "") {
+  Serial.println("DEBUG: " + DEBUG);
   if (DEBUG) {
     Serial.println(location + ": " + message);
   }

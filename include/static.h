@@ -1,5 +1,5 @@
 
-#define DEBUG false
+#define DEBUG true
 
 // Pin definitions for the OLED display
 #define OLED_CLK   52  // SCLK

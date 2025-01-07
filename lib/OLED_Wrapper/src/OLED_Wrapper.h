@@ -6,12 +6,12 @@
 
 class Screen_State_MANAGER {
 private:
-    U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI u8g2;
+    U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI u8g2; // Declare u8g2 as a member
 
     class Screen_State {
     public:
         virtual void Reset() = 0;
-        virtual void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) = 0;
+        virtual void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) = 0; // Use reference
     };
 
     class Screen_State_IDLE : public Screen_State {
@@ -19,7 +19,7 @@ private:
         bool screenInIdleState;
 
         void Reset() override;
-        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override;
+        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override; // Use reference
     };
 
     class Screen_State_READING : public Screen_State {
@@ -27,7 +27,7 @@ private:
         bool screenInReadingState;
 
         void Reset() override;
-        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override;
+        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override; // Use reference
     };
 
     class Screen_State_RESULT : public Screen_State {
@@ -37,8 +37,8 @@ private:
         unsigned long timer;
 
         void Reset() override;
-        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override;
-        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2, int32_t heart_rate);
+        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2) override; // Use reference
+        void display(U8G2_SSD1322_NHD_256X64_F_4W_SW_SPI& u8g2, int32_t heart_rate); // Use reference
         bool __reDrawState(int32_t heart_rate);
     };
 

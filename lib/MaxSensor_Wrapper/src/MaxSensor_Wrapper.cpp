@@ -51,7 +51,7 @@ void Sensor_Manager::update() {
     maxim_max30102_read_fifo(this->aun_red_buffer + i, this->aun_ir_buffer + i); // Read from MAX30102 FIFO
   }
 
-  rf_heart_rate_and_oxygen_saturation(
+  rf_heart_rate_and_oxygen_saturation(   // Look at trying out the maixim algorithm called maxim_heart_rate_and_oxygen_saturation
     aun_ir_buffer, BUFFER_SIZE, aun_red_buffer,
     &n_spo2, &ch_spo2_valid,      // Provide addresses for SpO₂ parameters
     &n_heart_rate, &ch_hr_valid,
@@ -67,7 +67,8 @@ void Sensor_Manager::update() {
     this->true_heart_rate =  n_heart_rate;
   }
   else {
-    Serial.println("Invalid Heart Rate");
+    //Serial.println("Invalid Heart Rate");
+    Serial.println("Invalid Heart Rate: " + String(n_heart_rate));
   }
 
   if (this->true_heart_rate > this->dummy_heart_rate){

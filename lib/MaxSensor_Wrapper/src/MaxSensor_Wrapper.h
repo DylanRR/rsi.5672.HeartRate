@@ -4,6 +4,7 @@
 #include <Arduino.h>
 #include "max30102.h" // Include the MAX30102 library
 #include "algorithm_by_RF.h"
+//#include "algorithm.h"
 
 class Sensor_Manager {
 private:
@@ -11,10 +12,13 @@ private:
   uint32_t aun_ir_buffer[BUFFER_SIZE];    // Infrared LED sensor data
   uint32_t aun_red_buffer[BUFFER_SIZE];   // Red LED sensor data
   int32_t true_heart_rate;
+  int32_t rolling_queue[3];
+  int queue_index;
   int32_t finger_threshold;
   int dummy_heart_rate;
   bool data_ramping;
   bool heart_rate_valid;
+  bool checkRollingQueue();
 
 public:
   Sensor_Manager(uint8_t pin, int32_t finger_threshold);

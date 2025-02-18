@@ -1,18 +1,21 @@
 #include <Arduino.h>
 #include <SPI.h>
-#include <MaxSensor_Wrapper.h>
+#include <SparkFun_Bio_Sensor_Hub_Library.h>
 #include <OLED_Wrapper.h>
 #include "static.h"
 // Create the Screen_State_MANAGER object
 Screen_State_MANAGER screenManager(OLED_CLK, OLED_MOSI, OLED_CS, OLED_DC, OLED_RESET);
-Sensor_Manager sensorManager(MAX30102_INT, FINGER_THRESHOLD);
+
+// Takes address, reset pin, and MFIO pin.
+SparkFun_Bio_Sensor_Hub bioHub(resPin, mfioPin); 
+bioData body;
 
 // Function Declarations
 void RUN_STATE();
 void IDLE_STATE();
 bool setup_determineCommunicationType();
 void DC_MAIN_LOOP();
-void DC_RUN_STATE();
+void DC_RUN_STATE(bioData* body);
 void DC_IDLE_STATE();
 void SC_MAIN_LOOP();
 byte int32ToByte(int32_t value);
@@ -23,6 +26,7 @@ String message_scrubber(const char* message);
 
 void setup() {
   Serial.begin(115200);
+  Wire.begin();
   debugPrint("Begining setup...");
   pinMode(SERIAL_OUTPUT_LED, OUTPUT);
   pinMode(DISPLAY_OUTPUT_LED, OUTPUT);
@@ -31,12 +35,10 @@ void setup() {
   pinMode(FINGER_DETECTED_LED, OUTPUT);
   pinMode(HEART_RATE_DETECTED_LED, OUTPUT);
   
-  sensorManager.init();
+  setup_sensor();
   debugPrint("Max Sensor initialized...");
 
   if (communicationType) {
-    sensorManager.setDataRamping(true);
-    debugPrint("Data ramping enabled...");
     screenManager.init();
     debugPrint("Display initialized...");
     screenManager.setState(0);
@@ -44,11 +46,27 @@ void setup() {
     digitalWrite(DISPLAY_OUTPUT_LED, HIGH);
   }
   else {
-    sensorManager.setDataRamping(false);
-    debugPrint("Data ramping disabled...");
     digitalWrite(SERIAL_OUTPUT_LED, HIGH);
   }
   debugPrint("Setup complete!");
+}
+
+void setup_sensor(){
+  int result = bioHub.begin();
+  if (!result)
+    debugPrint("Sensor found!");
+  else
+  debugPrint("Could not communicate with the sensor!!!");
+
+  debugPrint("Configuring Sensor...."); 
+  int error = bioHub.configBpm(MODE_ONE); // Configuring just the BPM settings. 
+  if(!error){
+    debugPrint("Sensor configured.");
+  }
+  else {
+    debugPrint("Error configuring sensor.");
+  }
+  delay(2000); // Wait for the sensor to stabilize.
 }
 
 bool setup_determineCommunicationType() {
@@ -106,30 +124,25 @@ void loop() {
 }
 
 void DC_MAIN_LOOP() {
-  if (sensorManager.isFingerDetected()) {
-    DC_RUN_STATE();
+  body = bioHub.readBpm();
+  if (body.status == 1) {
+    DC_RUN_STATE(&body);
   }
   else {
     DC_IDLE_STATE();
   }
 }
 
-void DC_RUN_STATE(){
+void DC_RUN_STATE(bioData* body){
   if (screenManager.getActiveState() == 0) {
       screenManager.setState(1);
       digitalWrite(FINGER_DETECTED_LED, HIGH);
   }
 
-  int32_t temp_HR;
-  temp_HR = sensorManager.getHeartRate();
-  sensorManager.update();
-  int32_t new_HR;
-  new_HR = sensorManager.getHeartRate();
-
-  if (temp_HR != new_HR) {
+  if (body->status == 3 && body->heartRate > 0 && body->confidence > 50) {  //TODO: Add a confidence var to the static file
     digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
     if (screenManager.getActiveState() == 1 || screenManager.getActiveState() == 2) {
-      screenManager.setState(2, new_HR);
+      screenManager.setState(2, body->heartRate);
     }
   }
 }
@@ -139,26 +152,22 @@ void DC_IDLE_STATE(){
     digitalWrite(FINGER_DETECTED_LED, LOW);
     digitalWrite(HEART_RATE_DETECTED_LED, LOW);
     screenManager.setState(0);
-    sensorManager.reset();
   }
 }
 
 bool SC_transmitting = false;
 void SC_MAIN_LOOP() {
-  if (sensorManager.isFingerDetected()) {
+  body = bioHub.readBpm();
+  if (body.status == 1) {
     if (!SC_transmitting) {
       digitalWrite(FINGER_DETECTED_LED, HIGH);
       Serial.write(STX);
       SC_transmitting = true;
     }
-    int32_t temp_HR;
-    temp_HR = sensorManager.getHeartRate();
-    sensorManager.update();
-    int32_t new_HR;
-    new_HR = sensorManager.getHeartRate();
-    if (temp_HR != new_HR) {
+
+    if (body.status == 3 && body.heartRate > 0 && body.confidence > 50) {  //TODO: Add a confidence var to the static file
       digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
-      Serial.write(int32ToByte(new_HR));
+      Serial.write(int32ToByte(body.heartRate));
       Serial.write(RS);
     }
   }

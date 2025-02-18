@@ -9,11 +9,6 @@
 #define OLED_RESET 48  // /RES
 
 
-
-// Global variables for the MAX30102 sensor
-#define FINGER_THRESHOLD 60000    // Threshold value for detecting a finger
-#define MAX30102_INT 3            // Interrupt pin for the MAX30102 sensor 
-
 // Global variables for serial communication
 bool transmitting = false;        // Flag to indicate if the device is currently transmitting data over serial
 unsigned long timer = 0;          // Timer used for sending SYNC bytes
@@ -32,3 +27,10 @@ bool communicationType; // Variable to store the type of communication (true for
 #define HEART_RATE_DETECTED_LED 24
 #define SERIAL_OUTPUT_LED 26
 #define DISPLAY_OUTPUT_LED 28
+
+
+// No other Address options.
+#define DEF_ADDR 0x55
+// Reset pin, MFIO pin
+const int resPin = 4;
+const int mfioPin = 5;

@@ -18,6 +18,7 @@ void DC_MAIN_LOOP();
 void DC_RUN_STATE(bioData* body);
 void DC_IDLE_STATE();
 void SC_MAIN_LOOP();
+void setup_sensor();
 byte int32ToByte(int32_t value);
 
 void debugPrint(char* message);
@@ -158,15 +159,16 @@ void DC_IDLE_STATE(){
 bool SC_transmitting = false;
 void SC_MAIN_LOOP() {
   body = bioHub.readBpm();
-  if (body.status == 1) {
+  if (body.status == 1 || body.status == 2 || body.status == 3) {
     if (!SC_transmitting) {
       digitalWrite(FINGER_DETECTED_LED, HIGH);
       Serial.write(STX);
       SC_transmitting = true;
     }
 
-    if (body.status == 3 && body.heartRate > 0 && body.confidence > 50) {  //TODO: Add a confidence var to the static file
+    if (body.status == 3 && body.heartRate > 30 && body.confidence > 50 ) {  //TODO: Add a confidence var to the static file
       digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
+      //Serial.println(String(body.heartRate));
       Serial.write(int32ToByte(body.heartRate));
       Serial.write(RS);
     }

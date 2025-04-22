@@ -32,5 +32,5 @@ bool communicationType; // Variable to store the type of communication (true for
 // No other Address options.
 #define DEF_ADDR 0x55
 // Reset pin, MFIO pin
-const int resPin = 4;
-const int mfioPin = 5;
+const int resPin = 13;
+const int mfioPin = 12;

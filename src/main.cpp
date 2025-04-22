@@ -126,7 +126,7 @@ void loop() {
 
 void DC_MAIN_LOOP() {
   body = bioHub.readBpm();
-  if (body.status == 1) {
+  if (body.status == 1 || body.status == 2 || body.status == 3) {
     DC_RUN_STATE(&body);
   }
   else {

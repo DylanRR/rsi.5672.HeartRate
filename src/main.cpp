@@ -49,6 +49,9 @@ void setup() {
   else {
     digitalWrite(SERIAL_OUTPUT_LED, HIGH);
   }
+
+  Wire.setWireTimeout(1000 /* us */, true /* reset_on_timeout */);
+
   debugPrint("Setup complete!");
 }
 
@@ -57,7 +60,7 @@ void setup_sensor(){
   if (!result)
     debugPrint("Sensor found!");
   else
-  debugPrint("Could not communicate with the sensor!!!");
+    debugPrint("Could not communicate with the sensor!!!");
 
   debugPrint("Configuring Sensor...."); 
   int error = bioHub.configBpm(MODE_ONE); // Configuring just the BPM settings. 
@@ -67,6 +70,8 @@ void setup_sensor(){
   else {
     debugPrint("Error configuring sensor.");
   }
+
+  Wire.setWireTimeout(1000 /* us */, true /* reset_on_timeout */);
   delay(2000); // Wait for the sensor to stabilize.
 }
 
@@ -113,24 +118,42 @@ bool setup_determineCommunicationType() {
 
 void loop() {
   if (communicationType) {
-    while (true) {
-      DC_MAIN_LOOP();
-    }
+    DC_MAIN_LOOP();
   }
   else {
-    while (true) {
-      SC_MAIN_LOOP();
-    }
+    SC_MAIN_LOOP();
   }
 }
 
 void DC_MAIN_LOOP() {
-  body = bioHub.readBpm();
-  if (body.status == 1 || body.status == 2 || body.status == 3) {
-    DC_RUN_STATE(&body);
-  }
-  else {
-    DC_IDLE_STATE();
+  int consecutiveValidStatusCount = 0; // Counter for consecutive 1, 2, or 3
+  int consecutiveZeroStatusCount = 0; // Counter for consecutive 0
+
+  while (true) {
+    body = bioHub.readBpm();
+
+    // Check if the status is 1, 2, or 3
+    if (body.status == 1 || body.status == 2 || body.status == 3) {
+      consecutiveValidStatusCount++;
+      consecutiveZeroStatusCount = 0; // Reset the zero counter
+
+      // Trigger the first if statement only if we see 3 consecutive valid statuses
+      if (consecutiveValidStatusCount >= 3) {
+        DC_RUN_STATE(&body);
+      }
+    }
+    // Check if the status is 0
+    else if (body.status == 0) {
+      consecutiveZeroStatusCount++;
+      consecutiveValidStatusCount = 0; // Reset the valid status counter
+
+      // Trigger the second if statement only if we see 3 consecutive zeros
+      if (consecutiveZeroStatusCount >= 3) {
+        DC_IDLE_STATE();
+      }
+    }
+
+    delay(100); // Add a small delay to avoid rapid polling
   }
 }
 
@@ -158,31 +181,33 @@ void DC_IDLE_STATE(){
 
 bool SC_transmitting = false;
 void SC_MAIN_LOOP() {
-  body = bioHub.readBpm();
-  if (body.status == 1 || body.status == 2 || body.status == 3) {
-    if (!SC_transmitting) {
-      digitalWrite(FINGER_DETECTED_LED, HIGH);
-      Serial.write(STX);
-      SC_transmitting = true;
-    }
+  while (true) {
+    body = bioHub.readBpm();
+    if (body.status == 1 || body.status == 2 || body.status == 3) {
+      if (!SC_transmitting) {
+        digitalWrite(FINGER_DETECTED_LED, HIGH);
+        Serial.write(STX);
+        SC_transmitting = true;
+      }
 
-    if (body.status == 3 && body.heartRate > 30 && body.confidence > 50 ) {  //TODO: Add a confidence var to the static file
-      digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
-      //Serial.println(String(body.heartRate));
-      Serial.write(int32ToByte(body.heartRate));
-      Serial.write(RS);
+      if (body.status == 3 && body.heartRate > 30 && body.confidence > 10 ) {  //TODO: Add a confidence var to the static file
+        digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
+        //Serial.println(String(body.heartRate));
+        Serial.write(int32ToByte(body.heartRate));
+        Serial.write(RS);
+      }
     }
-  }
-  else {
-    if (SC_transmitting) {
-      digitalWrite(FINGER_DETECTED_LED, LOW);
-      digitalWrite(HEART_RATE_DETECTED_LED, LOW);
-      Serial.write(ETX);
-      SC_transmitting = false;
-    }
-    if (!SC_transmitting && millis() - timer > SYNC_TIME) {
-      Serial.write(SYN);
-      timer = millis();
+    else {
+      if (SC_transmitting) {
+        digitalWrite(FINGER_DETECTED_LED, LOW);
+        digitalWrite(HEART_RATE_DETECTED_LED, LOW);
+        Serial.write(ETX);
+        SC_transmitting = false;
+      }
+      if (!SC_transmitting && millis() - timer > SYNC_TIME) {
+        Serial.write(SYN);
+        timer = millis();
+      }
     }
   }
 }
@@ -218,7 +243,6 @@ String message_scrubber(const char* message) {
   if (communicationType) {
     return String(message) + "\n";
   }
-  Serial.println("Scrubber");
   String result = "\n";
   for (int i = 0; i < strlen(message); i++) {
     bool isActiveChar = false;

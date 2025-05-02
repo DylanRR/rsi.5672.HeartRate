@@ -153,7 +153,6 @@ void DC_MAIN_LOOP() {
       }
     }
 
-    delay(100); // Add a small delay to avoid rapid polling
   }
 }
 
@@ -163,7 +162,7 @@ void DC_RUN_STATE(bioData* body){
       digitalWrite(FINGER_DETECTED_LED, HIGH);
   }
 
-  if (body->status == 3 && body->heartRate > 0 && body->confidence > 50) {  //TODO: Add a confidence var to the static file
+  if (body->status == 3 && body->confidence > 15) {  //TODO: Add a confidence var to the static file
     digitalWrite(HEART_RATE_DETECTED_LED, HIGH);
     if (screenManager.getActiveState() == 1 || screenManager.getActiveState() == 2) {
       screenManager.setState(2, body->heartRate);

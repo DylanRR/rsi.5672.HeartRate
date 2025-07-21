@@ -94,7 +94,7 @@ void setup_sensor(){
   }
 
   // More conservative I2C timeout for stability
-  Wire.setWireTimeout(1000 /* us */, true /* reset_on_timeout */); // Back to 1000 for stability
+  Wire.setWireTimeout(1000 /* us */, true /* reset_on_timeout */);
   
   // Extended sensor testing to verify it's working
   debugPrint("Extended sensor diagnostic test...");
@@ -179,7 +179,7 @@ void loop() {
   if (communicationType) {
     while (true) {
       DC_MAIN_LOOP();
-      // Reduced delay for even faster sensor polling (museum optimization)
+      // Reduced delay for even faster sensor polling
       delayMicroseconds(50); // Ultra-short delay - about 0.05ms for faster response
     }
   }
@@ -278,7 +278,7 @@ void DC_RUN_STATE(bioData* body){
       
       // Only update display if heart rate has changed significantly or it's been a while
       int hrDifference = abs(body->heartRate - lastHeartRate);
-      if (lastHeartRate == 0 || hrDifference >= 3 || (millis() - lastHeartRateUpdate > 3000)) {
+      if (lastHeartRate == 0 || hrDifference >= 1 || (millis() - lastHeartRateUpdate > 3000)) {
         
         char hrMsg[100];
         sprintf(hrMsg, "HEART RATE: %d BPM (Confidence: %d%%, Count: %d) FAST", 

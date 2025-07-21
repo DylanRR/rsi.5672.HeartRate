@@ -32,6 +32,7 @@ void setup() {
   pinMode(SERIAL_OUTPUT_LED, OUTPUT);
   pinMode(DISPLAY_OUTPUT_LED, OUTPUT);
   communicationType = setup_determineCommunicationType();
+  //communicationType = false; //WARNING: THIS IS A TEMP FIX FOR A BOARD WITH BAD JUMPERS
   debugPrint("Communication setup complete...");
   pinMode(FINGER_DETECTED_LED, OUTPUT);
   pinMode(HEART_RATE_DETECTED_LED, OUTPUT);
